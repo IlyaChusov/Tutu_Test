@@ -2,17 +2,20 @@ package com.johnny.tutu_test.database;
 
 import androidx.room.Dao;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
-import com.johnny.tutu_test.model.Pokemon;
+import com.johnny.tutu_test.model.PokemonAbilities;
 
 import java.util.List;
 
 @Dao
 public interface PokemonDAO {
 
-    @Query("SELECT * FROM pokemons")
-    public List<Pokemon> getAllPokemons();
+    @Transaction
+    @Query("SELECT * FROM pokemon")
+    public List<PokemonAbilities> getAllPokemons();
 
-    @Query("SELECT * FROM pokemons WHERE id=(:id)")
-    public Pokemon getPokemon(int id);
+    @Transaction
+    @Query("SELECT * FROM pokemon WHERE pokemonId=(:id)")
+    public PokemonAbilities getPokemon(int id);
 }

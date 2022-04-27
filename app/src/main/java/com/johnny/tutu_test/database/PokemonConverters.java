@@ -3,8 +3,11 @@ package com.johnny.tutu_test.database;
 import androidx.annotation.NonNull;
 import androidx.room.TypeConverter;
 
+import com.johnny.tutu_test.model.Ability;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 public class PokemonConverters {
 

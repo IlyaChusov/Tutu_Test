@@ -1,8 +1,22 @@
 package com.johnny.tutu_test.model;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity
 public class Ability {
+    @PrimaryKey
+    private int abilityId;
     private String name;
     private boolean isHidden;
+
+    public int getAbilityId() {
+        return abilityId;
+    }
+
+    public void setAbilityId(int abilityId) {
+        this.abilityId = abilityId;
+    }
 
     public String getName() {
         return name;

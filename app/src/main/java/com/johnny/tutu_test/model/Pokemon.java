@@ -1,20 +1,31 @@
 package com.johnny.tutu_test.model;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.net.URL;
 import java.util.List;
 
+@Entity
 public class Pokemon {
+    @PrimaryKey
+    private int pokemonId;
     private String name;
     private URL url;
     private int baseExperience;
     private double height;
     private double weight;
-    private List<Ability> abilities;
+
+    public int getPokemonId() {
+        return pokemonId;
+    }
+    public void setPokemonId(int pokemonId) {
+        this.pokemonId = pokemonId;
+    }
 
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -22,7 +33,6 @@ public class Pokemon {
     public URL getUrl() {
         return url;
     }
-
     public void setUrl(URL url) {
         this.url = url;
     }
@@ -30,7 +40,6 @@ public class Pokemon {
     public int getBaseExperience() {
         return baseExperience;
     }
-
     public void setBaseExperience(int baseExperience) {
         this.baseExperience = baseExperience;
     }
@@ -38,7 +47,6 @@ public class Pokemon {
     public double getHeight() {
         return height;
     }
-
     public void setHeight(double height) {
         this.height = height;
     }
@@ -46,16 +54,7 @@ public class Pokemon {
     public double getWeight() {
         return weight;
     }
-
     public void setWeight(double weight) {
         this.weight = weight;
-    }
-
-    public List<Ability> getAbilities() {
-        return abilities;
-    }
-
-    public void setAbilities(List<Ability> abilities) {
-        this.abilities = abilities;
     }
 }
