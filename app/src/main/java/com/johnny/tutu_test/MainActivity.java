@@ -24,6 +24,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.johnny.tutu_test.databinding.ActivityMainBinding;
+import com.johnny.tutu_test.model.Pokemon;
+import com.johnny.tutu_test.model.PokemonAbilities;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
@@ -68,13 +71,34 @@ public class MainActivity extends AppCompatActivity {
 
         FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
         binding.reloadButton.setOnClickListener((l) -> {
-            progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("Loading Pokemons...");
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+            showProgressDialog("Loading Pokemons...");
             fetchPokemonUrls.start();
         });
 
+        showProgressDialog("Getting pokemons from DB...");
+        PokemonRepository.get().getAllPokemons().observe(this, (pokemonAbilitiesList) -> {
+            pokemonUrls = new ArrayList<>();
+            for (PokemonAbilities pokemonAbility: pokemonAbilitiesList) {
+                Pokemon pokemon = pokemonAbility.pokemon;
+                pokemonUrls.add(new Pair<>(pokemon.getName(), pokemon.getUrl().toString()));
+            }
+            if (!pokemonUrls.isEmpty()) {
+                pokemonAdapter.notifyDataSetChanged();
+                Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
+            }
+            else
+                Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
+
+            progressDialog.dismiss();
+        });
+
+    }
+
+    private void showProgressDialog(@NonNull String message) {
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setMessage(message);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
     }
 
     public void fetchPokemonDetails() {

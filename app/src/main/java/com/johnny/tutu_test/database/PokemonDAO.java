@@ -1,5 +1,6 @@
 package com.johnny.tutu_test.database;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
 import androidx.room.Transaction;
@@ -14,12 +15,12 @@ public interface PokemonDAO {
 
     @Transaction
     @Query("SELECT * FROM pokemon")
-    public List<PokemonAbilities> getAllPokemons();
+    public LiveData<List<PokemonAbilities>> getAllPokemons();
 
     @Transaction
     @Query("SELECT * FROM pokemon WHERE pokemonId=(:id)")
-    public PokemonAbilities getPokemon(int id);
+    public LiveData<PokemonAbilities> getPokemon(int id);
 
     @Query("SELECT lastUpdateTime FROM DBLastUpdate WHERE actualTimeId=1")
-    public Date getLastDBUpdateTime();
+    public LiveData<Date> getLastDBUpdateTime();
 }

@@ -1,7 +1,9 @@
 package com.johnny.tutu_test;
 
 import android.content.Context;
+import android.util.Log;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Room;
 
 import com.johnny.tutu_test.database.PokemonDAO;
@@ -22,7 +24,9 @@ public class PokemonRepository {
     }
 
     private PokemonRepository(Context context) {
+        Log.d("TAG", "Initializing DB...");
         database = Room.databaseBuilder(context, PokemonDatabase.class, DATABASE_NAME).build();
+        Log.d("TAG", "DB initialized");
     }
 
     public static void initialize(Context context) {
@@ -34,11 +38,11 @@ public class PokemonRepository {
         return database.pokemonDAO();
     }
 
-    public PokemonAbilities getPokemon(int id) {
+    public LiveData<PokemonAbilities> getPokemon(int id) {
         return database.pokemonDAO().getPokemon(id);
     }
 
-    public List<PokemonAbilities> getAllPokemons() {
+    public LiveData<List<PokemonAbilities>> getAllPokemons() {
         return database.pokemonDAO().getAllPokemons();
     }
 }
