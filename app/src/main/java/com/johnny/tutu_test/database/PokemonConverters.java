@@ -3,11 +3,13 @@ package com.johnny.tutu_test.database;
 import androidx.annotation.NonNull;
 import androidx.room.TypeConverter;
 
-import com.johnny.tutu_test.model.Ability;
-
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class PokemonConverters {
 
@@ -25,5 +27,23 @@ public class PokemonConverters {
             return null;
         }
         return url;
+    }
+
+    @TypeConverter
+    public String fromDate(@NonNull Date date) {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+        return format.format(date);
+    }
+
+    @TypeConverter
+    public  Date toDate(String dateStr) {
+        Date date;
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+        try {
+            date = dateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            return new Date();
+        }
+        return date;
     }
 }
