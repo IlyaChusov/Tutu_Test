@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 public class Pokemon {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     private int pokemonId;
     private String name;
     private URL url;

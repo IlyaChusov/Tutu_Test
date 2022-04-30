@@ -12,12 +12,16 @@ import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class PokemonRepository {
 
     private static final String DATABASE_NAME = "pokemon_db";
     private static PokemonRepository repository;
     private static PokemonDatabase database;
+    private final PokemonDAO pokemonDAO;
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     public static PokemonRepository get() {
         return repository;
@@ -27,6 +31,7 @@ public class PokemonRepository {
         Log.d("TAG", "Initializing DB...");
         database = Room.databaseBuilder(context, PokemonDatabase.class, DATABASE_NAME).build();
         Log.d("TAG", "DB initialized");
+        pokemonDAO = database.pokemonDAO();
     }
 
     public static void initialize(Context context) {
@@ -34,15 +39,21 @@ public class PokemonRepository {
             repository = new PokemonRepository(context);
     }
 
-    public PokemonDAO pokemonDAO() {
-        return database.pokemonDAO();
-    }
-
     public LiveData<PokemonAbilities> getPokemon(int id) {
-        return database.pokemonDAO().getPokemon(id);
+        return pokemonDAO.getPokemon(id);
     }
 
     public LiveData<List<PokemonAbilities>> getAllPokemons() {
-        return database.pokemonDAO().getAllPokemons();
+        return pokemonDAO.getAllPokemons();
+    }
+
+    public void addPokemons(List<Pokemon> pokemons) {
+        Log.d("TAG", "New pokemons are added to DB");
+        executor.execute(() -> pokemonDAO.addPokemons(pokemons));
+    }
+
+    public void updatePokemons(List<Pokemon> pokemons) {
+        Log.d("TAG", "Pokemons are updating...");
+        executor.execute(() -> pokemonDAO.updatePokemons(pokemons));
     }
 }

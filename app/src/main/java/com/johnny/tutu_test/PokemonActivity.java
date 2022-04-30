@@ -6,13 +6,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class PokemonActivity extends AppCompatActivity {
-    public static final String POKEMON_NAME = "pokemonName";
+    public static final String POKEMON_ID = "pokemonId";
     public static final String POKEMON_URL = "pokemonUrl";
 
     @Override
@@ -20,15 +18,16 @@ public class PokemonActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pokemon);
 
-        String pokemonName = getIntent().getStringExtra(POKEMON_NAME);
-        ((TextView) findViewById(R.id.textView)).setText(pokemonName);
+        int pokemonId = getIntent().getIntExtra(POKEMON_ID, 0);
+        ((TextView) findViewById(R.id.textView)).setText(pokemonId + "");
     }
 
     @NonNull
-    public static Intent newIntent(Context context, @NonNull JSONObject pokemon) throws JSONException {
+    public static Intent newIntent(Context context, int pokemonId) {
         Intent intent = new Intent(context, PokemonActivity.class);
-        intent.putExtra(POKEMON_NAME, pokemon.getString("name"));
-        intent.putExtra(POKEMON_URL, pokemon.getString("url"));
+        Log.d("TAG", "putting int to intent: " + pokemonId);
+        intent.putExtra(POKEMON_ID, pokemonId);
+        //intent.putExtra(POKEMON_URL, pokemon.getString("url"));
 
         return intent;
     }
