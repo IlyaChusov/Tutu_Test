@@ -74,33 +74,40 @@ public class MainActivity extends AppCompatActivity {
             fetchPokemonUrls.start();
         });
 
+        showProgressDialog("Getting pokemons from DB...");
+        reloadPokemonListFromDB();
+
         binding.loadFromDBButton.setOnClickListener((l) -> {
             showProgressDialog("Getting pokemons from DB...");
-            LiveData<List<PokemonAbilities>> liveData = PokemonRepository.get().getAllPokemons();
-            liveData.observeForever(new Observer<List<PokemonAbilities>>() {
-                @Override
-                public void onChanged(List<PokemonAbilities> pokemonAbilitiesList) {
-                    Log.d("TAG", "Observer on rep's Pokemon list got new info");
-                    List<Pokemon> pokemonList_ = new ArrayList<>();
-                    StringBuilder s = new StringBuilder();
-                    for (PokemonAbilities pokemonAbility : pokemonAbilitiesList) {
-                        pokemonList_.add(pokemonAbility.pokemon);
-                        s.append(pokemonAbility.pokemon.getName()).append(", ");
-                    }
+            Log.d("TAG", "loading from DB...");
+            reloadPokemonListFromDB();
+        });
+    }
 
-                    viewModel.setPokemonList(pokemonList_);
-                    if (!pokemonList_.isEmpty()) {
-                        pokemonAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "got pokemonList: " + s);
-                        Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
-                    } else
-                        Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
+    private void reloadPokemonListFromDB() {
+        final LiveData<List<PokemonAbilities>> liveData = PokemonRepository.get().getAllPokemons();
+        liveData.observe(this, pokemonAbilitiesList -> {
+            Log.d("TAG", "Observer on rep's Pokemon list got new info");
+            List<Pokemon> pokemonList_ = new ArrayList<>();
+            StringBuilder s = new StringBuilder();
+            for (PokemonAbilities pokemonAbility : pokemonAbilitiesList) {
+                pokemonList_.add(pokemonAbility.pokemon);
+                s.append(pokemonAbility.pokemon.getName()).append(", ");
+            }
 
-                    //liveData.removeObserver(this);
-                    Log.d("TAG", "List from rep has observer: " + liveData.hasObservers());
-                    progressDialog.dismiss();
-                }
-            });
+            viewModel.setPokemonList(pokemonList_);
+            if (!pokemonList_.isEmpty()) {
+                pokemonAdapter.notifyDataSetChanged();
+                Log.d("TAG", "got pokemonList: " + s);
+                Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
+            } else
+                Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
+
+            Log.d("TAG", "removing observer...: " + liveData.hasObservers());
+            liveData.removeObservers(MainActivity.this);
+            Log.d("TAG", "List from rep has observer: " + liveData.hasObservers());
+            if (progressDialog != null)
+                progressDialog.dismiss();
         });
     }
 
@@ -164,11 +171,8 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         PokemonRepository.get().addPokemons(pokemonList_);
-                        viewModel.setPokemonList(pokemonList_);
-                        handler.post(() -> pokemonAdapter.notifyDataSetChanged());
-
-                        progressDialog.dismiss();
-                        handler.post(MainActivity.this::fetchPokemonDetails);
+                        handler.post(MainActivity.this::reloadPokemonListFromDB);
+                        //handler.post(MainActivity.this::fetchPokemonDetails);
                     }
                     else throw new JSONException("pokemonList is empty");
                 }
@@ -237,8 +241,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull PokemonHolder holder, int position) {
-            Log.d("TAG", "creating onBind for position " + position + ", pokemonList size: " + viewModel.getPokemonList().size());
-            PokemonRepository.get().getAllPokemons().observe(MainActivity.this, (list) -> Log.d("TAG", list.toString()));
+            //Log.d("TAG", "creating onBind for position " + position + ", pokemonList size: " + viewModel.getPokemonList().size());
+            //PokemonRepository.get().getAllPokemons().observe(MainActivity.this, (list) -> Log.d("TAG", list.toString()));
             Pokemon pokemon = viewModel.getPokemonList().get(position);
             holder.bind(pokemon.getPokemonId(), pokemon.getName());
 
@@ -260,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private void bind(int pokemonId, @NonNull String pokemonName) {
-            Log.d("TAG", "binding new Holder with pokemonId: " + pokemonId);
+            //Log.d("TAG", "binding new Holder with pokemonId: " + pokemonId);
             this.pokemonId = pokemonId;
 
             ((TextView) itemView.findViewById(R.id.pokemonName)).setText(pokemonName);

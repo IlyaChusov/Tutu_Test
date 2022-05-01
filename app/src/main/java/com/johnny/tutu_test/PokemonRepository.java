@@ -44,6 +44,7 @@ public class PokemonRepository {
     }
 
     public LiveData<List<PokemonAbilities>> getAllPokemons() {
+        Log.d("TAG", "getting all pokemons from repository...");
         return pokemonDAO.getAllPokemons();
     }
 

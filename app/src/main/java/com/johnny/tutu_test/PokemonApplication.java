@@ -10,9 +10,13 @@ public class PokemonApplication extends Application {
         super.onCreate();
         PreferenceWork.setContext(this);
 
-        Log.d("TAG", "Deleting DB...");
-        this.deleteDatabase("pokemon_db");
+        deleteDB();
 
         PokemonRepository.initialize(this);
+    }
+
+    private void deleteDB() {
+        Log.d("TAG", "Deleting DB...");
+        this.deleteDatabase("pokemon_db");
     }
 }
