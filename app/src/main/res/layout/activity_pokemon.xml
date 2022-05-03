@@ -3,13 +3,47 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PokemonActivity">
+    tools:context=".PokemonActivity"
+    android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/pokemonNameActivity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/filling"
+        android:text="@string/pokemon_name_filling"
+        android:textSize="40sp"
+        android:layout_margin="10dp"
+        android:textColor="@color/black"
         tools:layout_editor_absoluteX="48dp"
         tools:layout_editor_absoluteY="54dp" />
+
+    <TextView
+        android:id="@+id/pokemonExp"
+        android:textSize="20sp"
+        android:text="@string/pokemon_exp_filling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
+
+    <TextView
+        android:id="@+id/pokemonHeight"
+        android:textSize="20sp"
+        android:text="@string/pokemon_height_filling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
+
+    <TextView
+        android:id="@+id/pokemonWeight"
+        android:textSize="20sp"
+        android:text="@string/pokemon_weight_filling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
+
+    <ListView
+        android:id="@+id/abilitiesList"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 </LinearLayout>

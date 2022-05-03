@@ -2,6 +2,15 @@
     <string name="app_name">Tutu_Test</string>
     <string name="title_activity_main">MainActivity</string>
 
-    <string name="filling">Some text</string>
-    <string name="reloadBtn">Reload data</string>
+    <string name="pokemon_name_filling">Pokemon name</string>
+
+    <string name="pokemon_exp_filling">Pokemon experience</string>
+    <string name="pokemon_height_filling">Pokemon height</string>
+    <string name="pokemon_weight_filling">Pokemon weight</string>
+
+    <string name="pokemon_exp">Base experience: %1$s</string>
+    <string name="pokemon_height">Height: %1$s</string>
+    <string name="pokemon_weight">Weight: %1$s</string>
+
+    <string name="reload_but">Reload data</string>
 </resources>

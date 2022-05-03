@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,8 +37,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -84,7 +85,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private interface Callback {
+        void call();
+    }
+
     private void reloadPokemonListFromDB() {
+        reloadPokemonListFromDB(() -> {});
+    }
+
+    private void reloadPokemonListFromDB(@NonNull Callback callback) {
         final LiveData<List<PokemonAbilities>> liveData = PokemonRepository.get().getAllPokemons();
         liveData.observe(this, pokemonAbilitiesList -> {
             Log.d("TAG", "Observer on rep's Pokemon list got new info");
@@ -98,11 +107,12 @@ public class MainActivity extends AppCompatActivity {
             viewModel.setPokemonList(pokemonList_);
             if (!pokemonList_.isEmpty()) {
                 pokemonAdapter.notifyDataSetChanged();
-                Log.d("TAG", "got pokemonList: " + s);
+                //Log.d("TAG", "got pokemonList: " + s);
                 Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
             } else
                 Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
 
+            callback.call();
             Log.d("TAG", "removing observer...: " + liveData.hasObservers());
             liveData.removeObservers(MainActivity.this);
             Log.d("TAG", "List from rep has observer: " + liveData.hasObservers());
@@ -120,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void fetchPokemonDetails() {
         List<Pokemon> pokemonList_ = viewModel.getPokemonList();
+        /*
         for (int i = 0; i < pokemonList_.size(); i++) {
             final Pokemon pokemon = pokemonList_.get(i);
             viewModel.getPokemonDict().get(pokemon.getName()).observeForever(
@@ -135,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
             );
         }
+         */
         new FetchPokemonDetails(pokemonList_);
     }
 
@@ -170,9 +182,8 @@ public class MainActivity extends AppCompatActivity {
                             viewModel.getPokemonDict().put(pokemonName, new MutableLiveData<>());
                         }
 
-                        PokemonRepository.get().addPokemons(pokemonList_);
-                        handler.post(MainActivity.this::reloadPokemonListFromDB);
-                        //handler.post(MainActivity.this::fetchPokemonDetails);
+                        PokemonRepository.get().addPokemons(pokemonList_, false);
+                        handler.post(() -> reloadPokemonListFromDB(MainActivity.this::fetchPokemonDetails));
                     }
                     else throw new JSONException("pokemonList is empty");
                 }
@@ -190,8 +201,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class FetchPokemonDetails extends Thread {
+    static class FetchPokemonDetails extends Thread {
         private final List<Pokemon> pokemons;
+        public static final HashMap<Integer, MutableLiveData<Boolean>> detailsLoadingMap = new HashMap<>();
+
         public FetchPokemonDetails(List<Pokemon> pokemons) {
             this.pokemons = pokemons;
 
@@ -202,6 +215,11 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             try {
                 Log.d("TAG", "Got a request to load pokemons' details");
+                Log.d("TAG", "pokemons list size: " + pokemons.size());
+
+                for (Pokemon pokemon: pokemons)
+                    detailsLoadingMap.put(pokemon.getPokemonId(), new MutableLiveData<>(false));
+
                 for (Pokemon pokemon: pokemons) {
                     HttpURLConnection httpURLConnection = (HttpURLConnection) pokemon.getUrl().openConnection();
                     InputStream inputStream = httpURLConnection.getInputStream();
@@ -221,10 +239,12 @@ public class MainActivity extends AppCompatActivity {
                     pokemon.setHeight(jsonObject.getDouble("height"));
                     pokemon.setWeight(jsonObject.getDouble("weight"));
 
+                    PokemonRepository.get().updatePokemon(pokemon, false);
+                    Objects.requireNonNull(detailsLoadingMap.get(pokemon.getPokemonId())).postValue(true);
                     Log.d("TAG", "pokemon with name \"" + pokemon.getName() + "\" is updated");
                     //viewModel.getPokemonDict().get(pokemonName).postValue(jsonObject);
                 }
-                PokemonRepository.get().updatePokemons(pokemons);
+                //PokemonRepository.get().updatePokemons(pokemons, false);
             }
             catch (IOException | JSONException e) {
                 e.printStackTrace();
@@ -268,16 +288,18 @@ public class MainActivity extends AppCompatActivity {
             this.pokemonId = pokemonId;
 
             ((TextView) itemView.findViewById(R.id.pokemonName)).setText(pokemonName);
-            //if (lastItem) {
-            //    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            //    lp.setMargins(35, 20, 35, 300);
-            //    itemView.setLayoutParams(lp);
-            //}
+            /*
+            if (lastItem) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(35, 20, 35, 300);
+                itemView.setLayoutParams(lp);
+            }
+             */
         }
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(getApplicationContext(), "PogU", Toast.LENGTH_LONG).show();
+            //Toast.makeText(getApplicationContext(), "PogU", Toast.LENGTH_LONG).show();
             startActivity(PokemonActivity.newIntent(MainActivity.this, pokemonId));
         }
     }

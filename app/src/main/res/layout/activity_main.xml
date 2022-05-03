@@ -34,7 +34,7 @@
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="@dimen/fab_margin"
         app:srcCompat="@drawable/ic_baseline_sync"
-        android:contentDescription="@string/reloadBtn" />
+        android:contentDescription="@string/reload_but" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/loadFromDBButton"
@@ -44,6 +44,6 @@
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="@dimen/fab_margin"
         app:srcCompat="@drawable/ic_baseline_sync"
-        android:contentDescription="@string/reloadBtn" />
+        android:contentDescription="@string/reload_but" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

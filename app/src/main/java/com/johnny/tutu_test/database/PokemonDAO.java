@@ -32,4 +32,7 @@ public interface PokemonDAO {
 
     @Update
     void updatePokemons(List<Pokemon> pokemons);
+
+    @Update
+    void updatePokemon(Pokemon pokemon);
 }

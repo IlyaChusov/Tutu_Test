@@ -44,17 +44,27 @@ public class PokemonRepository {
     }
 
     public LiveData<List<PokemonAbilities>> getAllPokemons() {
-        Log.d("TAG", "getting all pokemons from repository...");
         return pokemonDAO.getAllPokemons();
     }
 
-    public void addPokemons(List<Pokemon> pokemons) {
-        Log.d("TAG", "New pokemons are added to DB");
-        executor.execute(() -> pokemonDAO.addPokemons(pokemons));
+    public void addPokemons(List<Pokemon> pokemons, boolean fromMainThread) {
+        if (fromMainThread)
+            executor.execute(() -> pokemonDAO.addPokemons(pokemons));
+        else
+            pokemonDAO.addPokemons(pokemons);
     }
 
-    public void updatePokemons(List<Pokemon> pokemons) {
-        Log.d("TAG", "Pokemons are updating...");
-        executor.execute(() -> pokemonDAO.updatePokemons(pokemons));
+    public void updatePokemons(List<Pokemon> pokemons, boolean fromMainThread) {
+        if (fromMainThread)
+            executor.execute(() -> pokemonDAO.updatePokemons(pokemons));
+        else
+            pokemonDAO.updatePokemons(pokemons);
+    }
+
+    public void updatePokemon(Pokemon pokemon, boolean fromMainThread) {
+        if (fromMainThread)
+            executor.execute(() -> pokemonDAO.updatePokemon(pokemon));
+        else
+            pokemonDAO.updatePokemon(pokemon);
     }
 }
