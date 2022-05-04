@@ -3,7 +3,6 @@
     <string name="title_activity_main">MainActivity</string>
 
     <string name="pokemon_name_filling">Pokemon name</string>
-
     <string name="pokemon_exp_filling">Pokemon experience</string>
     <string name="pokemon_height_filling">Pokemon height</string>
     <string name="pokemon_weight_filling">Pokemon weight</string>
@@ -11,6 +10,10 @@
     <string name="pokemon_exp">Base experience: %1$s</string>
     <string name="pokemon_height">Height: %1$s</string>
     <string name="pokemon_weight">Weight: %1$s</string>
+
+    <string name="abilities_list">Abilities list:</string>
+    <string name="abilities_list_placing">Abilities list: %1$s</string>
+    <string name="ability_hidden">Hidden: %1$b</string>
 
     <string name="reload_but">Reload data</string>
 </resources>

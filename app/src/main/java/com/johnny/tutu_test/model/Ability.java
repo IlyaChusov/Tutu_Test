@@ -1,14 +1,16 @@
 package com.johnny.tutu_test.model;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 
-@Entity
+@Entity(foreignKeys = {@ForeignKey(entity = Pokemon.class, parentColumns = "pokemonId", childColumns = "pokemonOwnerId", onDelete = 5, onUpdate = 5)})
 public class Ability {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     private int abilityId;
     private String name;
     private boolean isHidden;
+    private int pokemonOwnerId;
 
     public int getAbilityId() {
         return abilityId;
@@ -33,4 +35,13 @@ public class Ability {
     public void setHidden(boolean hidden) {
         isHidden = hidden;
     }
+
+    public int getPokemonOwnerId() {
+        return pokemonOwnerId;
+    }
+
+    public void setPokemonOwnerId(int pokemonOwnerId) {
+        this.pokemonOwnerId = pokemonOwnerId;
+    }
+
 }

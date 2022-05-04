@@ -4,7 +4,6 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 import java.net.URL;
-import java.util.List;
 
 @Entity
 public class Pokemon {

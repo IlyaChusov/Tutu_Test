@@ -1,13 +1,13 @@
-package com.johnny.tutu_test;
+package com.johnny.tutu_test.database;
 
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.WorkerThread;
 import androidx.lifecycle.LiveData;
 import androidx.room.Room;
 
-import com.johnny.tutu_test.database.PokemonDAO;
-import com.johnny.tutu_test.database.PokemonDatabase;
+import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
@@ -28,7 +28,6 @@ public class PokemonRepository {
     }
 
     private PokemonRepository(Context context) {
-        Log.d("TAG", "Initializing DB...");
         database = Room.databaseBuilder(context, PokemonDatabase.class, DATABASE_NAME).build();
         Log.d("TAG", "DB initialized");
         pokemonDAO = database.pokemonDAO();
@@ -45,6 +44,11 @@ public class PokemonRepository {
 
     public LiveData<List<PokemonAbilities>> getAllPokemons() {
         return pokemonDAO.getAllPokemons();
+    }
+
+    @WorkerThread
+    public List<Ability> getAllAbilities() {
+        return pokemonDAO.getAllAbilities();
     }
 
     public void addPokemons(List<Pokemon> pokemons, boolean fromMainThread) {
@@ -66,5 +70,12 @@ public class PokemonRepository {
             executor.execute(() -> pokemonDAO.updatePokemon(pokemon));
         else
             pokemonDAO.updatePokemon(pokemon);
+    }
+
+    public void addAbilities(List<Ability> abilities, boolean fromMainThread) {
+        if (fromMainThread)
+            executor.execute(() -> pokemonDAO.addAbilities(abilities));
+        else
+            pokemonDAO.addAbilities(abilities);
     }
 }

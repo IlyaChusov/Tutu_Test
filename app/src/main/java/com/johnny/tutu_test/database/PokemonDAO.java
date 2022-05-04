@@ -7,6 +7,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 
+import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
@@ -24,11 +25,17 @@ public interface PokemonDAO {
     @Query("SELECT * FROM pokemon WHERE pokemonId=(:id)")
     LiveData<PokemonAbilities> getPokemon(int id);
 
+    @Query("SELECT * FROM ability")
+    List<Ability> getAllAbilities();
+
     @Query("SELECT lastUpdateTime FROM DBLastUpdate WHERE actualTimeId=1")
     LiveData<Date> getLastDBUpdateTime();
 
     @Insert
     void addPokemons(List<Pokemon> pokemons);
+
+    @Insert
+    void addAbilities(List<Ability> abilities);
 
     @Update
     void updatePokemons(List<Pokemon> pokemons);

@@ -41,9 +41,16 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"/>
 
+    <TextView
+        android:id="@+id/abilitiesText"
+        android:textSize="20sp"
+        android:textColor="@color/black"
+        android:text="@string/abilities_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
     <ListView
         android:id="@+id/abilitiesList"
-        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 </LinearLayout>

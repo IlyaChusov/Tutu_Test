@@ -20,7 +20,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.johnny.tutu_test.database.PokemonRepository;
 import com.johnny.tutu_test.databinding.ActivityMainBinding;
+import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
@@ -100,15 +102,12 @@ public class MainActivity extends AppCompatActivity {
             viewModel.setPokemonList(pokemonList_);
             if (!pokemonList_.isEmpty()) {
                 pokemonAdapter.notifyDataSetChanged();
-                //Log.d("TAG", "got pokemonList: " + s);
                 Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
             } else
                 Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
 
             callback.call();
-            Log.d("TAG", "removing observer...: " + liveData.hasObservers());
             liveData.removeObservers(MainActivity.this);
-            Log.d("TAG", "List from rep has observer: " + liveData.hasObservers());
             if (progressDialog != null)
                 progressDialog.dismiss();
         });
@@ -194,24 +193,40 @@ public class MainActivity extends AppCompatActivity {
                 for (Pokemon pokemon: pokemons)
                     detailsLoadingMap.put(pokemon.getPokemonId(), new MutableLiveData<>(false));
 
+                final List<Ability> abilitiesInDB = PokemonRepository.get().getAllAbilities();
+
                 for (Pokemon pokemon: pokemons) {
-                    HttpURLConnection httpURLConnection = (HttpURLConnection) pokemon.getUrl().openConnection();
-                    InputStream inputStream = httpURLConnection.getInputStream();
-                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                    String pokemonData = loadDataFromUrl(pokemon.getUrl());
 
-                    String line;
-                    StringBuilder builder = new StringBuilder();
-                    while ((line = bufferedReader.readLine()) != null)
-                        builder.append(line);
-                    String data = builder.toString();
-                    if (data.isEmpty())
-                        throw new IOException("cannot get data for pokemon");
-
-                    JSONObject jsonObject = new JSONObject(data);
+                    JSONObject jsonObject = new JSONObject(pokemonData);
                     pokemon.setBaseExperience(jsonObject.getInt("base_experience"));
                     pokemon.setHeight(jsonObject.getDouble("height"));
                     pokemon.setWeight(jsonObject.getDouble("weight"));
+
+                    final List<Ability> abilities = new ArrayList<>();
+                    JSONArray abilitiesArray = jsonObject.getJSONArray("abilities");
+                    for (int i = 0; i < abilitiesArray.length(); i++) {
+                        JSONObject abilityInArray = abilitiesArray.getJSONObject(i);
+                        JSONObject abilityArray = abilityInArray.getJSONObject("ability");
+                        String abilityName = abilityArray.getString("name");
+                        boolean alreadyExists = false;
+                        for (Ability ab : abilitiesInDB)
+                            if (ab.getName().equals(abilityName)) {
+                                alreadyExists = true;
+                                break;
+                            }
+                        if (!alreadyExists) {
+                            final Ability ability = new Ability();
+                            ability.setName(abilityName);
+                            ability.setHidden(abilityInArray.getBoolean("is_hidden"));
+                            ability.setPokemonOwnerId(pokemon.getPokemonId());
+
+                            abilitiesInDB.add(ability);
+                            abilities.add(ability);
+                        }
+                    }
+
+                    PokemonRepository.get().addAbilities(abilities, false);
 
                     PokemonRepository.get().updatePokemon(pokemon, false);
                     Objects.requireNonNull(detailsLoadingMap.get(pokemon.getPokemonId())).postValue(true);
@@ -221,6 +236,29 @@ public class MainActivity extends AppCompatActivity {
             catch (IOException | JSONException e) {
                 e.printStackTrace();
             }
+        }
+
+        @NonNull
+        private String loadDataFromUrl(@NonNull URL url) throws IOException {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            InputStream inputStream = httpURLConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            String line;
+            StringBuilder builder = new StringBuilder();
+            while ((line = bufferedReader.readLine()) != null)
+                builder.append(line);
+            String data = builder.toString();
+            if (data.isEmpty())
+                throw new IOException("cannot get data for pokemon");
+
+            bufferedReader.close();
+            inputStreamReader.close();
+            inputStream.close();
+            httpURLConnection.disconnect();
+
+            return data;
         }
     }
 

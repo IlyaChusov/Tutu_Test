@@ -9,6 +9,6 @@ public class PokemonAbilities {
     @Embedded
     public Pokemon pokemon;
 
-    @Relation(parentColumn = "pokemonId", entityColumn = "abilityId")
+    @Relation(parentColumn = "pokemonId", entityColumn = "pokemonOwnerId")
     public List<Ability> abilities;
 }
