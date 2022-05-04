@@ -17,7 +17,6 @@ import android.widget.Toast;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.ui.AppBarConfiguration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,13 +37,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private final PokemonAdapter pokemonAdapter = new PokemonAdapter();
     private final Handler handler = new Handler();
@@ -64,10 +61,6 @@ public class MainActivity extends AppCompatActivity {
         binding.recycler.setAdapter(pokemonAdapter);
 
         viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
-
-        // TODO: убрать pokemonDict
-        if (viewModel.getPokemonDict() == null)
-            viewModel.setPokemonDict(new Hashtable<>());
 
         FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
         binding.reloadButton.setOnClickListener((l) -> {
@@ -129,25 +122,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void fetchPokemonDetails() {
-        List<Pokemon> pokemonList_ = viewModel.getPokemonList();
-        /*
-        for (int i = 0; i < pokemonList_.size(); i++) {
-            final Pokemon pokemon = pokemonList_.get(i);
-            viewModel.getPokemonDict().get(pokemon.getName()).observeForever(
-                    new Observer<JSONObject>() {
-                        @Override
-                        public void onChanged(JSONObject jsonObject) {
-
-                            Log.d("TAG", "PokemonDict from viewModel got new JSONObject: " + jsonObject);
-                            viewModel.getPokemonDict().get(pokemon.getName()).removeObserver(this);
-                        }
-                    }
-
-
-            );
-        }
-         */
-        new FetchPokemonDetails(pokemonList_);
+        new FetchPokemonDetails(viewModel.getPokemonList());
     }
 
     class FetchPokemonUrls extends Thread {
@@ -179,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
                             pokemon.setName(pokemonName);
                             pokemon.setUrl(new URL(dataArray.getJSONObject(i).getString("url")));
                             pokemonList_.add(pokemon);
-                            viewModel.getPokemonDict().put(pokemonName, new MutableLiveData<>());
                         }
 
                         PokemonRepository.get().addPokemons(pokemonList_, false);
@@ -242,9 +216,7 @@ public class MainActivity extends AppCompatActivity {
                     PokemonRepository.get().updatePokemon(pokemon, false);
                     Objects.requireNonNull(detailsLoadingMap.get(pokemon.getPokemonId())).postValue(true);
                     Log.d("TAG", "pokemon with name \"" + pokemon.getName() + "\" is updated");
-                    //viewModel.getPokemonDict().get(pokemonName).postValue(jsonObject);
                 }
-                //PokemonRepository.get().updatePokemons(pokemons, false);
             }
             catch (IOException | JSONException e) {
                 e.printStackTrace();
