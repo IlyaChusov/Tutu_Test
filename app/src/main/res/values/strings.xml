@@ -15,5 +15,7 @@
     <string name="abilities_list_placing">Abilities list: %1$s</string>
     <string name="ability_hidden">Hidden: %1$b</string>
 
+    <string name="last_update_time_filling">Last update time: none</string>
+    <string name="last_update_time">Last update time:\n%1$s</string>
     <string name="reload_but">Reload data</string>
 </resources>

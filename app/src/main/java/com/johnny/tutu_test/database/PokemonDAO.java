@@ -31,6 +31,9 @@ public interface PokemonDAO {
     @Query("SELECT lastUpdateTime FROM DBLastUpdate WHERE actualTimeId=1")
     LiveData<Date> getLastDBUpdateTime();
 
+    @Query("SELECT * FROM DBLastUpdate")
+    DBLastUpdate getLastDBUpdateTime_all();
+
     @Insert
     void addPokemons(List<Pokemon> pokemons);
 
@@ -42,4 +45,10 @@ public interface PokemonDAO {
 
     @Update
     void updatePokemon(Pokemon pokemon);
+
+    @Insert
+    void addLastDBUpdateTime(DBLastUpdate date);
+
+    @Query("UPDATE DBLastUpdate SET lastUpdateTime = (:date) WHERE actualTimeId=1")
+    void setLastDBUpdateTime(Date date);
 }

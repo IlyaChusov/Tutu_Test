@@ -11,6 +11,7 @@ import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -19,7 +20,6 @@ public class PokemonRepository {
 
     private static final String DATABASE_NAME = "pokemon_db";
     private static PokemonRepository repository;
-    private static PokemonDatabase database;
     private final PokemonDAO pokemonDAO;
     private final Executor executor = Executors.newSingleThreadExecutor();
 
@@ -28,7 +28,7 @@ public class PokemonRepository {
     }
 
     private PokemonRepository(Context context) {
-        database = Room.databaseBuilder(context, PokemonDatabase.class, DATABASE_NAME).build();
+        PokemonDatabase database = Room.databaseBuilder(context, PokemonDatabase.class, DATABASE_NAME).build();
         Log.d("TAG", "DB initialized");
         pokemonDAO = database.pokemonDAO();
     }
@@ -49,6 +49,10 @@ public class PokemonRepository {
     @WorkerThread
     public List<Ability> getAllAbilities() {
         return pokemonDAO.getAllAbilities();
+    }
+
+    public LiveData<Date> getLastDBUpdateTime() {
+        return pokemonDAO.getLastDBUpdateTime();
     }
 
     public void addPokemons(List<Pokemon> pokemons, boolean fromMainThread) {
@@ -77,5 +81,25 @@ public class PokemonRepository {
             executor.execute(() -> pokemonDAO.addAbilities(abilities));
         else
             pokemonDAO.addAbilities(abilities);
+    }
+
+    public void setLastDBUpdateTime(Date date, boolean fromMainThread) {
+        if (fromMainThread)
+            executor.execute(() -> setLastDBUpdateTime(date));
+        else
+            setLastDBUpdateTime(date);
+    }
+
+    @WorkerThread
+    private void setLastDBUpdateTime(Date date) {
+        DBLastUpdate dbLastUpdate = pokemonDAO.getLastDBUpdateTime_all();
+        Log.d("TAG", "Got LastDBUpdateTime_all: " + dbLastUpdate);
+        if (dbLastUpdate == null) {
+            dbLastUpdate = new DBLastUpdate();
+            dbLastUpdate.setLastUpdateTime(date);
+            pokemonDAO.addLastDBUpdateTime(dbLastUpdate);
+        }
+        else
+            pokemonDAO.setLastDBUpdateTime(date);
     }
 }

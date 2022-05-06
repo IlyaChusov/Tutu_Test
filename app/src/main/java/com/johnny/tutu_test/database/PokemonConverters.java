@@ -31,14 +31,14 @@ public class PokemonConverters {
 
     @TypeConverter
     public String fromDate(@NonNull Date date) {
-        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-        return format.format(date);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return dateFormat.format(date);
     }
 
     @TypeConverter
-    public  Date toDate(String dateStr) {
+    public Date toDate(String dateStr) {
         Date date;
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         try {
             date = dateFormat.parse(dateStr);
         } catch (ParseException e) {

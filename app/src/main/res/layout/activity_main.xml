@@ -16,8 +16,18 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/Theme.Tutu_Test.PopupOverlay" />
+            app:popupTheme="@style/Theme.Tutu_Test.PopupOverlay" >
 
+            <TextView
+                android:id="@+id/last_update_time"
+                android:text="@string/last_update_time_filling"
+                android:layout_gravity="end"
+                android:textSize="15sp"
+                android:layout_marginEnd="15dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
 <androidx.recyclerview.widget.RecyclerView

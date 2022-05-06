@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.johnny.tutu_test.database.PokemonConverters;
 import com.johnny.tutu_test.database.PokemonRepository;
 import com.johnny.tutu_test.databinding.ActivityMainBinding;
 import com.johnny.tutu_test.model.Ability;
@@ -37,10 +38,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,6 +84,20 @@ public class MainActivity extends AppCompatActivity {
             showProgressDialog("Getting pokemons from DB...");
             Log.d("TAG", "loading from DB...");
             reloadPokemonListFromDB();
+        });
+
+        reloadLastUpdateDBTime();
+    }
+
+    private void reloadLastUpdateDBTime() {
+        final LiveData<Date> liveData = PokemonRepository.get().getLastDBUpdateTime();
+        liveData.observe(this, date -> {
+            if (date != null) {
+                DateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
+                binding.lastUpdateTime.setText(getResources().getString(R.string.last_update_time, dateFormat.format(date)));
+            }
+
+            liveData.removeObservers(MainActivity.this);
         });
     }
 
@@ -156,6 +177,8 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         PokemonRepository.get().addPokemons(pokemonList_, false);
+                        PokemonRepository.get().setLastDBUpdateTime(new Date(), false);
+                        handler.post(MainActivity.this::reloadLastUpdateDBTime);
                         handler.post(() -> reloadPokemonListFromDB(MainActivity.this::fetchPokemonDetails));
                     }
                     else throw new JSONException("pokemonList is empty");

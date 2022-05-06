@@ -1,5 +1,6 @@
 package com.johnny.tutu_test.database;
 
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -9,6 +10,7 @@ import java.util.Date;
 public class DBLastUpdate {
 
     @PrimaryKey
+    @ColumnInfo(defaultValue = "1")
     private int actualTimeId = 1;
     private Date lastUpdateTime;
 
