@@ -43,28 +43,33 @@ public class PokemonActivity extends AppCompatActivity {
         }
 
         int pokemonId = getIntent().getIntExtra(POKEMON_ID, 0);
-        MutableLiveData<Boolean> liveData = MainActivity.FetchPokemonDetails.detailsLoadingMap.get(pokemonId);
-        if (liveData != null) {
-            Object value = liveData.getValue();
-            if (value != null)
-                if ((boolean) value)
-                    placeAllData(pokemonId);
-                else {
-                    ProgressDialog progressDialog = new ProgressDialog(this);
-                    progressDialog.setMessage("Waiting for pokemon to load...");
-                    progressDialog.setCancelable(false);
-                    progressDialog.show();
+        FetchPokemonDetails detailsThread = FetchPokemonDetails.get();
+        if (detailsThread != null) {
+            MutableLiveData<Boolean> liveData = detailsThread.getDetailsLoadingMap().get(pokemonId);
+            if (liveData != null) {
+                Object value = liveData.getValue();
+                if (value != null)
+                    if ((boolean) value)
+                        placeAllData(pokemonId);
+                    else {
+                        ProgressDialog progressDialog = new ProgressDialog(this);
+                        progressDialog.setMessage("Waiting for pokemon to load...");
+                        progressDialog.setCancelable(false);
+                        progressDialog.show();
 
-                    liveData.observe(this, aBoolean -> {
-                        if (aBoolean) {
-                            Log.d("TAG", "Got a pokemon for PokemonActivity, updating...");
-                            placeAllData(pokemonId);
-                            liveData.removeObservers(PokemonActivity.this);
-                            progressDialog.dismiss();
-                        }
-                    });
-                }
+                        liveData.observe(this, aBoolean -> {
+                            if (aBoolean) {
+                                Log.d("TAG", "Got a pokemon for PokemonActivity, updating...");
+                                placeAllData(pokemonId);
+                                liveData.removeObservers(PokemonActivity.this);
+                                progressDialog.dismiss();
+                            }
+                        });
+                    }
+            }
         }
+        else
+            placeAllData(pokemonId);
     }
 
     private void placeAllData(int pokemonId) {

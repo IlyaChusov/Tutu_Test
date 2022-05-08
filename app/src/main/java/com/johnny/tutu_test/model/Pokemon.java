@@ -14,6 +14,7 @@ public class Pokemon {
     private int baseExperience;
     private double height;
     private double weight;
+    private URL imageURL;
 
     public int getPokemonId() {
         return pokemonId;
@@ -55,5 +56,12 @@ public class Pokemon {
     }
     public void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    public URL getImageURL() {
+        return imageURL;
+    }
+    public void setImageURL(URL imageURL) {
+        this.imageURL = imageURL;
     }
 }

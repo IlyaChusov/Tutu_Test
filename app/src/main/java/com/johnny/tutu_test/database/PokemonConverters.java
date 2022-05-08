@@ -14,7 +14,9 @@ import java.util.Locale;
 public class PokemonConverters {
 
     @TypeConverter
-    public String fromURL(@NonNull URL url) {
+    public String fromURL(URL url) {
+        if (url == null)
+            return "";
         return url.toString();
     }
 

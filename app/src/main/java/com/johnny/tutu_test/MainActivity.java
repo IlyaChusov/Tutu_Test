@@ -1,19 +1,25 @@
 package com.johnny.tutu_test;
 
 import android.app.ProgressDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -32,10 +38,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -53,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private final PokemonAdapter pokemonAdapter = new PokemonAdapter();
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper()); // TODO: Deprecated Handler
     private ProgressDialog progressDialog;
     private MainActivityViewModel viewModel;
 
@@ -106,10 +116,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void reloadPokemonListFromDB() {
-        reloadPokemonListFromDB(() -> {});
+        reloadPokemonListFromDB(() -> {}, () -> {});
     }
 
-    private void reloadPokemonListFromDB(@NonNull Callback callback) {
+    private void reloadPokemonListFromDB(@NonNull Callback callback1, @NonNull Callback callback2) {
         final LiveData<List<PokemonAbilities>> liveData = PokemonRepository.get().getAllPokemons();
         liveData.observe(this, pokemonAbilitiesList -> {
             Log.d("TAG", "Observer on rep's Pokemon list got new info");
@@ -121,13 +131,14 @@ public class MainActivity extends AppCompatActivity {
             }
 
             viewModel.setPokemonList(pokemonList_);
+            callback1.call();
             if (!pokemonList_.isEmpty()) {
                 pokemonAdapter.notifyDataSetChanged();
                 Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
             } else
                 Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
 
-            callback.call();
+            callback2.call();
             liveData.removeObservers(MainActivity.this);
             if (progressDialog != null)
                 progressDialog.dismiss();
@@ -145,11 +156,15 @@ public class MainActivity extends AppCompatActivity {
         new FetchPokemonDetails(viewModel.getPokemonList());
     }
 
-    class FetchPokemonUrls extends Thread {
-        String data;
+    private class FetchPokemonUrls extends Thread {
+        public FetchPokemonUrls() {
+            super("PokemonUrls Thread");
+        }
+
         @Override
         public void run() {
             try {
+                String data;
                 URL url = new URL("https://pokeapi.co/api/v2/pokemon/");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
@@ -179,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                         PokemonRepository.get().addPokemons(pokemonList_, false);
                         PokemonRepository.get().setLastDBUpdateTime(new Date(), false);
                         handler.post(MainActivity.this::reloadLastUpdateDBTime);
-                        handler.post(() -> reloadPokemonListFromDB(MainActivity.this::fetchPokemonDetails));
+                        handler.post(() -> reloadPokemonListFromDB(() -> new FetchPokemonImages(viewModel), MainActivity.this::fetchPokemonDetails));
                     }
                     else throw new JSONException("pokemonList is empty");
                 }
@@ -194,94 +209,6 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.dismiss();
             }
 
-        }
-    }
-
-    static class FetchPokemonDetails extends Thread {
-        private final List<Pokemon> pokemons;
-        public static final HashMap<Integer, MutableLiveData<Boolean>> detailsLoadingMap = new HashMap<>();
-
-        public FetchPokemonDetails(List<Pokemon> pokemons) {
-            this.pokemons = pokemons;
-
-            this.start();
-        }
-
-        @Override
-        public void run() {
-            try {
-                Log.d("TAG", "Got a request to load pokemons' details");
-                Log.d("TAG", "pokemons list size: " + pokemons.size());
-
-                for (Pokemon pokemon: pokemons)
-                    detailsLoadingMap.put(pokemon.getPokemonId(), new MutableLiveData<>(false));
-
-                final List<Ability> abilitiesInDB = PokemonRepository.get().getAllAbilities();
-
-                for (Pokemon pokemon: pokemons) {
-                    String pokemonData = loadDataFromUrl(pokemon.getUrl());
-
-                    JSONObject jsonObject = new JSONObject(pokemonData);
-                    pokemon.setBaseExperience(jsonObject.getInt("base_experience"));
-                    pokemon.setHeight(jsonObject.getDouble("height"));
-                    pokemon.setWeight(jsonObject.getDouble("weight"));
-
-                    final List<Ability> abilities = new ArrayList<>();
-                    JSONArray abilitiesArray = jsonObject.getJSONArray("abilities");
-                    for (int i = 0; i < abilitiesArray.length(); i++) {
-                        JSONObject abilityInArray = abilitiesArray.getJSONObject(i);
-                        JSONObject abilityArray = abilityInArray.getJSONObject("ability");
-                        String abilityName = abilityArray.getString("name");
-                        boolean alreadyExists = false;
-                        for (Ability ab : abilitiesInDB)
-                            if (ab.getName().equals(abilityName)) {
-                                alreadyExists = true;
-                                break;
-                            }
-                        if (!alreadyExists) {
-                            final Ability ability = new Ability();
-                            ability.setName(abilityName);
-                            ability.setHidden(abilityInArray.getBoolean("is_hidden"));
-                            ability.setPokemonOwnerId(pokemon.getPokemonId());
-
-                            abilitiesInDB.add(ability);
-                            abilities.add(ability);
-                        }
-                    }
-
-                    PokemonRepository.get().addAbilities(abilities, false);
-
-                    PokemonRepository.get().updatePokemon(pokemon, false);
-                    Objects.requireNonNull(detailsLoadingMap.get(pokemon.getPokemonId())).postValue(true);
-                    Log.d("TAG", "pokemon with name \"" + pokemon.getName() + "\" is updated");
-                }
-            }
-            catch (IOException | JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @NonNull
-        private String loadDataFromUrl(@NonNull URL url) throws IOException {
-            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-            InputStream inputStream = httpURLConnection.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-            String line;
-            StringBuilder builder = new StringBuilder();
-            while ((line = bufferedReader.readLine()) != null)
-                builder.append(line);
-            String data = builder.toString();
-            if (data.isEmpty())
-                throw new IOException("cannot get data for pokemon");
-
-            bufferedReader.close();
-            inputStreamReader.close();
-            inputStream.close();
-            httpURLConnection.disconnect();
-
-            return data;
         }
     }
 
@@ -309,6 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class PokemonHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private int pokemonId;
+        final FetchPokemonImages imagesThread = FetchPokemonImages.get();
 
         public PokemonHolder(@NonNull @NotNull LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.list_item, parent, false));
@@ -319,20 +247,46 @@ public class MainActivity extends AppCompatActivity {
         private void bind(int pokemonId, @NonNull String pokemonName) {
             //Log.d("TAG", "binding new Holder with pokemonId: " + pokemonId);
             this.pokemonId = pokemonId;
-
             ((TextView) itemView.findViewById(R.id.pokemonName)).setText(pokemonName);
-            /*
-            if (lastItem) {
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(35, 20, 35, 300);
-                itemView.setLayoutParams(lp);
+            final ImageView imageView = itemView.findViewById(R.id.thumbnail);
+            imageView.setImageDrawable(AppCompatResources.getDrawable(MainActivity.this, R.drawable.ic_android_black));
+
+            File imageFile = new File(getFilesDir().getAbsolutePath() + "/images/thumbnails", "pok_id_" + pokemonId + "_thumb.png");
+            if (imageFile.exists()) {
+                Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                if (image != null)
+                    imageView.setImageBitmap(image);
             }
-             */
+            else {
+                if (imagesThread != null) {
+                    MutableLiveData<Boolean> liveData = imagesThread.getImagesLoadingMap().get(pokemonId);
+                    if (liveData != null) {
+                        Object value = liveData.getValue();
+                        if (value != null) {
+                            if ((boolean) value)
+                                Toast.makeText(getApplicationContext(), "liveData is true, but image are missing, pokemonId: " + pokemonId, Toast.LENGTH_LONG).show();
+                            else {
+                                liveData.removeObservers(MainActivity.this);
+                                liveData.observe(MainActivity.this, aBoolean -> {
+                                    if (aBoolean) {
+                                        Log.d("TAG", "Got new image to place! PokemonId: " + pokemonId);
+                                        File imageFile_ = new File(getFilesDir().getAbsolutePath() + "/images/thumbnails", "pok_id_" + pokemonId + "_thumb.png");
+                                        if (imageFile_.exists()) {
+                                            Bitmap image = BitmapFactory.decodeFile(imageFile_.getAbsolutePath());
+                                            if (image != null)
+                                                imageView.setImageBitmap(image);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         @Override
         public void onClick(View v) {
-            //Toast.makeText(getApplicationContext(), "PogU", Toast.LENGTH_LONG).show();
             startActivity(PokemonActivity.newIntent(MainActivity.this, pokemonId));
         }
     }

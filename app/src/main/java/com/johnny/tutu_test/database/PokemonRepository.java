@@ -93,7 +93,6 @@ public class PokemonRepository {
     @WorkerThread
     private void setLastDBUpdateTime(Date date) {
         DBLastUpdate dbLastUpdate = pokemonDAO.getLastDBUpdateTime_all();
-        Log.d("TAG", "Got LastDBUpdateTime_all: " + dbLastUpdate);
         if (dbLastUpdate == null) {
             dbLastUpdate = new DBLastUpdate();
             dbLastUpdate.setLastUpdateTime(date);
