@@ -5,6 +5,9 @@ import android.util.Log;
 
 import com.johnny.tutu_test.database.PokemonRepository;
 
+import java.io.File;
+import java.util.Objects;
+
 public class PokemonApplication extends Application {
 
     @Override
@@ -13,6 +16,8 @@ public class PokemonApplication extends Application {
         PreferenceWork.setContext(this);
 
         deleteDB();
+        deleteImages(getFilesDir().getAbsolutePath() + "/images/thumbnails");
+        deleteImages(getFilesDir().getAbsolutePath() + "/images/orig");
 
         PokemonRepository.initialize(this);
     }
@@ -20,5 +25,11 @@ public class PokemonApplication extends Application {
     private void deleteDB() {
         Log.d("TAG", "Deleting DB...");
         this.deleteDatabase("pokemon_db");
+    }
+    private void deleteImages(String dirPath) {
+        String[] children = new File(dirPath).list();
+        if (children != null)
+            for (String child: children)
+                new File(dirPath, child).delete();
     }
 }
