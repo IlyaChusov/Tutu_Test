@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
@@ -48,46 +49,36 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private final PokemonAdapter pokemonAdapter = new PokemonAdapter();
-    private final Handler handler = new Handler(Looper.getMainLooper()); // TODO: Deprecated Handler
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private ProgressDialog progressDialog;
     private MainActivityViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
-
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
         binding.recycler.setAdapter(pokemonAdapter);
-
-        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
-
         binding.reloadButton.setOnClickListener((l) -> {
-            showProgressDialog("Loading Pokemons...");
+            showProgressDialog(R.string.loading_pokemons);
             FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
             fetchPokemonUrls.start();
         });
 
-        showProgressDialog("Getting pokemons from DB...");
-        reloadPokemonListFromDB();
-
-        binding.loadFromDBButton.setOnClickListener((l) -> {
-            showProgressDialog("Getting pokemons from DB...");
-            Log.d("TAG", "loading from DB...");
+        if (savedInstanceState == null) {
+            showProgressDialog(R.string.getting_pokemons_from_db);
             reloadPokemonListFromDB();
-        });
-
-        reloadLastUpdateDBTime();
+            reloadLastUpdateDBTime();
+        }
     }
 
     private void reloadLastUpdateDBTime() {
@@ -114,20 +105,17 @@ public class MainActivity extends AppCompatActivity {
     private void reloadPokemonListFromDB(@NonNull Callback callback1, @NonNull Callback callback2) {
         final LiveData<List<PokemonAbilities>> liveData = PokemonRepository.get().getAllPokemons();
         liveData.observe(this, pokemonAbilitiesList -> {
-            Log.d("TAG", "Observer on rep's Pokemon list got new info");
-            List<Pokemon> pokemonList_ = new ArrayList<>();
-            StringBuilder s = new StringBuilder();
-            for (PokemonAbilities pokemonAbility : pokemonAbilitiesList) {
-                pokemonList_.add(pokemonAbility.pokemon);
-                s.append(pokemonAbility.pokemon.getName()).append(", ");
-            }
+            List<Pokemon> pokemonList = new ArrayList<>();
+            for (PokemonAbilities pokemonAbility : pokemonAbilitiesList)
+                pokemonList.add(pokemonAbility.pokemon);
 
-            viewModel.setPokemonList(pokemonList_);
+            viewModel.setPokemonList(pokemonList);
             callback1.call();
-            if (!pokemonList_.isEmpty()) {
+            if (!pokemonList.isEmpty()) {
                 pokemonAdapter.notifyDataSetChanged();
                 Toast.makeText(MainActivity.this, R.string.db_sync_is_done, Toast.LENGTH_SHORT).show();
-            } else
+            }
+            else
                 Toast.makeText(MainActivity.this, R.string.db_is_empty, Toast.LENGTH_SHORT).show();
 
             callback2.call();
@@ -137,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showProgressDialog(@NonNull String message) {
+    private void showProgressDialog(@StringRes int messageResId) {
         progressDialog = new ProgressDialog(MainActivity.this);
-        progressDialog.setMessage(message);
+        progressDialog.setMessage(getResources().getString(messageResId));
         progressDialog.setCancelable(false);
         progressDialog.show();
     }
@@ -228,11 +216,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull PokemonHolder holder, int position) {
-            //Log.d("TAG", "creating onBind for position " + position + ", pokemonList size: " + viewModel.getPokemonList().size());
-            //PokemonRepository.get().getAllPokemons().observe(MainActivity.this, (list) -> Log.d("TAG", list.toString()));
             Pokemon pokemon = viewModel.getPokemonList().get(position);
             holder.bind(pokemon.getPokemonId(), pokemon.getName());
-
         }
 
         @Override
@@ -252,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private void bind(int pokemonId, @NonNull String pokemonName) {
-            //Log.d("TAG", "binding new Holder with pokemonId: " + pokemonId);
             this.pokemonId = pokemonId;
             ((TextView) itemView.findViewById(R.id.pokemonName)).setText(pokemonName);
             final ImageView imageView = itemView.findViewById(R.id.thumbnail);
@@ -271,12 +255,11 @@ public class MainActivity extends AppCompatActivity {
                         Object value = liveData.getValue();
                         if (value != null) {
                             if ((boolean) value)
-                                Toast.makeText(getApplicationContext(), "liveData is true, but image are missing, pokemonId: " + pokemonId, Toast.LENGTH_LONG).show();
+                                Log.e("TAG", "liveData is true, but image are missing, pokemonId: " + pokemonId);
                             else {
                                 liveData.removeObservers(MainActivity.this);
                                 liveData.observe(MainActivity.this, aBoolean -> {
                                     if (aBoolean) {
-                                        Log.d("TAG", "Got new image to place! PokemonId: " + pokemonId);
                                         File imageFile_ = new File(getFilesDir().getAbsolutePath() + "/images/thumbnails", "pok_id_" + pokemonId + "_thumb.png");
                                         if (imageFile_.exists()) {
                                             Bitmap image = BitmapFactory.decodeFile(imageFile_.getAbsolutePath());

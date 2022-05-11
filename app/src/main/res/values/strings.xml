@@ -8,9 +8,9 @@
     <string name="pokemon_height_filling">Pokemon height</string>
     <string name="pokemon_weight_filling">Pokemon weight</string>
 
-    <string name="pokemon_exp">Base experience: %1$s</string>
-    <string name="pokemon_height">Height: %1$s</string>
-    <string name="pokemon_weight">Weight: %1$s</string>
+    <string name="pokemon_exp">Base experience: %1$d</string>
+    <string name="pokemon_height">Height: %1$.1f</string>
+    <string name="pokemon_weight">Weight: %1$.1f</string>
     <string name="pokemon_image">Pokemon image</string>
 
     <string name="abilities_list">Abilities list:</string>
@@ -24,4 +24,7 @@
     <string name="db_is_updated_already">Database is up-to-date already</string>
     <string name="db_sync_is_done">Sync with database is done</string>
     <string name="db_is_empty">Database is empty</string>
+    <string name="loading_pokemons">Loading pokemons…</string>
+    <string name="getting_pokemons_from_db">Getting pokemons from DB…</string>
+    <string name="waiting_for_pokemon_to_load">Waiting for pokemon to load…</string>
 </resources>

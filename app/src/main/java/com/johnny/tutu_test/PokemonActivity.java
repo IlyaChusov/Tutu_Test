@@ -15,7 +15,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,14 +57,13 @@ public class PokemonActivity extends AppCompatActivity {
                         placeTextData(pokemonId);
                     else {
                         ProgressDialog progressDialog = new ProgressDialog(this);
-                        progressDialog.setMessage("Waiting for pokemon to load...");
+                        progressDialog.setMessage(getResources().getString(R.string.waiting_for_pokemon_to_load));
                         progressDialog.setCanceledOnTouchOutside(false);
                         progressDialog.setOnCancelListener(listener -> finish());
                         progressDialog.show();
 
                         liveData.observe(this, aBoolean -> {
                             if (aBoolean) {
-                                Log.d("TAG", "Got a pokemon for PokemonActivity, updating...");
                                 placeTextData(pokemonId);
                                 liveData.removeObservers(PokemonActivity.this);
                                 progressDialog.dismiss();
@@ -89,7 +87,6 @@ public class PokemonActivity extends AppCompatActivity {
                         else {
                             liveData.observe(this, aBoolean -> {
                                 if (aBoolean) {
-                                    Log.d("TAG", "Got an image for PokemonActivity, updating...");
                                     placeImage(pokemonId, pokemonImage);
                                     liveData.removeObservers(PokemonActivity.this);
                                 }
@@ -110,8 +107,6 @@ public class PokemonActivity extends AppCompatActivity {
         pokemonLiveData.observeForever(new Observer<PokemonAbilities>() {
             @Override
             public void onChanged(PokemonAbilities pokemonAbilities) {
-                Log.d("TAG", "Got new info to load in PokemonActivity");
-
                 Pokemon pokemon = pokemonAbilities.pokemon;
                 List<Ability> abilities = pokemonAbilities.abilities;
                 if (pokemon == null || abilities == null)
@@ -191,9 +186,7 @@ public class PokemonActivity extends AppCompatActivity {
     @NonNull
     public static Intent newIntent(Context context, int pokemonId) {
         Intent intent = new Intent(context, PokemonActivity.class);
-        Log.d("TAG", "putting int to intent: " + pokemonId);
         intent.putExtra(POKEMON_ID, pokemonId);
-
         return intent;
     }
 }

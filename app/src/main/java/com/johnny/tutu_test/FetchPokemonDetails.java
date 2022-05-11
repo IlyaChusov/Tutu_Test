@@ -1,7 +1,5 @@
 package com.johnny.tutu_test;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
@@ -53,11 +51,8 @@ public class FetchPokemonDetails extends Thread {
     @Override
     public void run() {
         try {
-            Log.d("TAG", "Got a request to load pokemons' details");
-            Log.d("TAG", "pokemons list size: " + pokemons.size());
-
             final List<Ability> abilitiesInDB = PokemonRepository.get().getAllAbilities();
-            FetchPokemonImages imagesThread = FetchPokemonImages.get();
+            final FetchPokemonImages imagesThread = FetchPokemonImages.get();
 
             for (Pokemon pokemon: pokemons) {
                 String pokemonData = loadDataFromUrl(pokemon.getUrl());
@@ -90,12 +85,9 @@ public class FetchPokemonDetails extends Thread {
                         abilities.add(ability);
                     }
                 }
-
                 PokemonRepository.get().addAbilities(abilities, false);
-
                 PokemonRepository.get().updatePokemon(pokemon, false);
                 Objects.requireNonNull(detailsLoadingMap.get(pokemon.getPokemonId())).postValue(true);
-                Log.d("TAG", "pokemon with name \"" + pokemon.getName() + "\" is updated");
 
                 if (imagesThread != null)
                     imagesThread.loadImage(pokemon.getPokemonId(), pokemon.getImageURL());

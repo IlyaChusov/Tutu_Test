@@ -67,13 +67,6 @@ public class PokemonRepository {
             pokemonDAO.addPokemons(pokemons);
     }
 
-    public void updatePokemons(List<Pokemon> pokemons, boolean fromMainThread) {
-        if (fromMainThread)
-            executor.execute(() -> pokemonDAO.updatePokemons(pokemons));
-        else
-            pokemonDAO.updatePokemons(pokemons);
-    }
-
     public void updatePokemon(Pokemon pokemon, boolean fromMainThread) {
         if (fromMainThread)
             executor.execute(() -> pokemonDAO.updatePokemon(pokemon));

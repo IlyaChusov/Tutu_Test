@@ -2,7 +2,6 @@ package com.johnny.tutu_test;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,10 +47,6 @@ public class FetchPokemonImages {
         return imagesLoadingMap;
     }
 
-    boolean loadImage(int pokemonId) {
-        return false;
-    }
-
     public void loadImage(int pokemonId, URL url) {
         executor.execute(() -> {
             if (executeLoading(pokemonId, url))
@@ -61,7 +56,6 @@ public class FetchPokemonImages {
 
     @WorkerThread
     private boolean executeLoading(int pokemonId, URL url) {
-        Log.d("TAG", "Got a request to load image for pokemonId: " + pokemonId);
         try {
             String appDirPath = viewModel.getApplication().getFilesDir().getAbsolutePath();
             loadImageInFile(url, appDirPath + "/images/thumbnails", "pok_id_" + pokemonId + "_thumb.png", true);
@@ -69,7 +63,6 @@ public class FetchPokemonImages {
             return true;
         }
         catch (IOException e) {
-            Log.d("TAG", "failed while loading image for pokemon with id: " + pokemonId);
             e.printStackTrace();
             return false;
         }

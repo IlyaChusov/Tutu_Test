@@ -40,16 +40,6 @@
         android:id="@+id/reloadButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:layout_marginBottom="@dimen/fab_margin"
-        app:srcCompat="@drawable/ic_baseline_sync"
-        android:contentDescription="@string/reload_but" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/loadFromDBButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="@dimen/fab_margin"

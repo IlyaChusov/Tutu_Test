@@ -44,9 +44,6 @@ public interface PokemonDAO {
     void addAbilities(List<Ability> abilities);
 
     @Update
-    void updatePokemons(List<Pokemon> pokemons);
-
-    @Update
     void updatePokemon(Pokemon pokemon);
 
     @Insert
