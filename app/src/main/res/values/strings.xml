@@ -10,6 +10,7 @@
     <string name="pokemon_exp">Base experience: %1$s</string>
     <string name="pokemon_height">Height: %1$s</string>
     <string name="pokemon_weight">Weight: %1$s</string>
+    <string name="pokemon_image">Pokemon image</string>
 
     <string name="abilities_list">Abilities list:</string>
     <string name="abilities_list_placing">Abilities list: %1$s</string>

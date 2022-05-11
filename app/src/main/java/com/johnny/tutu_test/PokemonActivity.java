@@ -12,12 +12,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -26,6 +29,7 @@ import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
+import java.io.File;
 import java.util.List;
 
 public class PokemonActivity extends AppCompatActivity {
@@ -43,24 +47,26 @@ public class PokemonActivity extends AppCompatActivity {
         }
 
         int pokemonId = getIntent().getIntExtra(POKEMON_ID, 0);
-        FetchPokemonDetails detailsThread = FetchPokemonDetails.get();
+        final FetchPokemonDetails detailsThread = FetchPokemonDetails.get();
+        final FetchPokemonImages imagesThread = FetchPokemonImages.get();
         if (detailsThread != null) {
             MutableLiveData<Boolean> liveData = detailsThread.getDetailsLoadingMap().get(pokemonId);
             if (liveData != null) {
                 Object value = liveData.getValue();
                 if (value != null)
                     if ((boolean) value)
-                        placeAllData(pokemonId);
+                        placeTextData(pokemonId);
                     else {
                         ProgressDialog progressDialog = new ProgressDialog(this);
                         progressDialog.setMessage("Waiting for pokemon to load...");
-                        progressDialog.setCancelable(false);
+                        progressDialog.setCanceledOnTouchOutside(false);
+                        progressDialog.setOnCancelListener(listener -> finish());
                         progressDialog.show();
 
                         liveData.observe(this, aBoolean -> {
                             if (aBoolean) {
                                 Log.d("TAG", "Got a pokemon for PokemonActivity, updating...");
-                                placeAllData(pokemonId);
+                                placeTextData(pokemonId);
                                 liveData.removeObservers(PokemonActivity.this);
                                 progressDialog.dismiss();
                             }
@@ -69,10 +75,31 @@ public class PokemonActivity extends AppCompatActivity {
             }
         }
         else
-            placeAllData(pokemonId);
+            placeTextData(pokemonId);
+
+        final ImageView pokemonImage = findViewById(R.id.pokemonImage);
+        if (!placeImage(pokemonId, pokemonImage))
+            if (imagesThread != null) {
+                MutableLiveData<Boolean> liveData = imagesThread.getImagesLoadingMap().get(pokemonId);
+                if (liveData != null) {
+                    Object value = liveData.getValue();
+                    if (value != null)
+                        if ((boolean) value)
+                            placeImage(pokemonId, pokemonImage);
+                        else {
+                            liveData.observe(this, aBoolean -> {
+                                if (aBoolean) {
+                                    Log.d("TAG", "Got an image for PokemonActivity, updating...");
+                                    placeImage(pokemonId, pokemonImage);
+                                    liveData.removeObservers(PokemonActivity.this);
+                                }
+                            });
+                        }
+                }
+            }
     }
 
-    private void placeAllData(int pokemonId) {
+    private void placeTextData(int pokemonId) {
         ListView abilitiesList = findViewById(R.id.abilitiesList);
         TextView pokemonName = findViewById(R.id.pokemonNameActivity);
         TextView pokemonExp = findViewById(R.id.pokemonExp);
@@ -87,6 +114,8 @@ public class PokemonActivity extends AppCompatActivity {
 
                 Pokemon pokemon = pokemonAbilities.pokemon;
                 List<Ability> abilities = pokemonAbilities.abilities;
+                if (pokemon == null || abilities == null)
+                    return;
 
                 Resources resources = getResources();
                 pokemonName.setText(pokemon.getName());
@@ -100,6 +129,18 @@ public class PokemonActivity extends AppCompatActivity {
                 pokemonLiveData.removeObserver(this);
             }
         });
+    }
+
+    private boolean placeImage(int pokemonId, @NonNull ImageView pokemonImage) {
+        final File imageFile = new File(getFilesDir().getAbsolutePath() + "/images/orig", "pok_id_" + pokemonId + ".png");
+        if (imageFile.exists()) {
+            final Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            if (image != null) {
+                pokemonImage.setImageBitmap(image);
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class AbilitiesAdapter extends ArrayAdapter<Ability> {

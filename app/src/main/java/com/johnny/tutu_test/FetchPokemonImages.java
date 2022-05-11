@@ -1,9 +1,7 @@
 package com.johnny.tutu_test;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.HandlerThread;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -22,7 +20,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -62,7 +59,8 @@ public class FetchPokemonImages {
         });
     }
 
-    boolean executeLoading(int pokemonId, URL url) {
+    @WorkerThread
+    private boolean executeLoading(int pokemonId, URL url) {
         Log.d("TAG", "Got a request to load image for pokemonId: " + pokemonId);
         try {
             String appDirPath = viewModel.getApplication().getFilesDir().getAbsolutePath();
@@ -77,12 +75,13 @@ public class FetchPokemonImages {
         }
     }
 
+    @WorkerThread
     private void loadImageInFile(@NonNull URL url, String folderName, String fileName, boolean compress) throws IOException {
         File file = new File(folderName, fileName);
         if (file.exists())
             return;
         Bitmap image = loadImageFromUrl(url, compress);
-        file.getParentFile().mkdirs();
+        Objects.requireNonNull(file.getParentFile()).mkdirs();
         file.createNewFile();
         OutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
         image.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -98,7 +97,7 @@ public class FetchPokemonImages {
         Bitmap image;
         if (compress) {
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 8;
+            options.inSampleSize = 4;
             image = BitmapFactory.decodeStream(inputStream, null, options);
         }
         else
