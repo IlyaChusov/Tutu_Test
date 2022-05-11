@@ -21,6 +21,9 @@ public interface PokemonDAO {
     @Query("SELECT * FROM pokemon")
     LiveData<List<PokemonAbilities>> getAllPokemons();
 
+    @Query("SELECT * FROM pokemon")
+    List<Pokemon> getAllPokemonsOnly();
+
     @Transaction
     @Query("SELECT * FROM pokemon WHERE pokemonId=(:id)")
     LiveData<PokemonAbilities> getPokemon(int id);

@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,10 +25,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.johnny.tutu_test.database.PokemonConverters;
 import com.johnny.tutu_test.database.PokemonRepository;
 import com.johnny.tutu_test.databinding.ActivityMainBinding;
-import com.johnny.tutu_test.model.Ability;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
@@ -38,26 +35,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 
-        FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
         binding.reloadButton.setOnClickListener((l) -> {
             showProgressDialog("Loading Pokemons...");
+            FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
             fetchPokemonUrls.start();
         });
 
@@ -106,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
                 DateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
                 binding.lastUpdateTime.setText(getResources().getString(R.string.last_update_time, dateFormat.format(date)));
             }
-
+            if (progressDialog != null)
+                progressDialog.dismiss();
             liveData.removeObservers(MainActivity.this);
         });
     }
@@ -182,19 +174,25 @@ public class MainActivity extends AppCompatActivity {
                     JSONArray dataArray = dataObject.getJSONArray("results");
                     if (dataArray.length() != 0) {
 
-                        final List<Pokemon> pokemonList_ = new ArrayList<>();
+                        final PokemonRepository pokemonRepository = PokemonRepository.get();
+                        final List<Pokemon> pokemonsFromDB = pokemonRepository.getAllPokemonsOnly();
+                        final List<Pokemon> pokemonListToBeAdded = new ArrayList<>();
+
                         for (int i = 0; i < dataArray.length(); i++) {
                             String pokemonName = dataArray.getJSONObject(i).getString("name");
-                            Pokemon pokemon = new Pokemon();
-                            pokemon.setName(pokemonName);
-                            pokemon.setUrl(new URL(dataArray.getJSONObject(i).getString("url")));
-                            pokemonList_.add(pokemon);
+                            if (!pokemonListHasPokemon(pokemonsFromDB, pokemonName)) {
+                                Pokemon pokemon = new Pokemon();
+                                pokemon.setName(pokemonName);
+                                pokemon.setUrl(new URL(dataArray.getJSONObject(i).getString("url")));
+                                pokemonListToBeAdded.add(pokemon);
+                            }
                         }
-
-                        PokemonRepository.get().addPokemons(pokemonList_, false);
-                        PokemonRepository.get().setLastDBUpdateTime(new Date(), false);
+                        if (!pokemonListToBeAdded.isEmpty()) {
+                            pokemonRepository.addPokemons(pokemonListToBeAdded, false);
+                            handler.post(() -> reloadPokemonListFromDB(() -> new FetchPokemonImages(viewModel), MainActivity.this::fetchPokemonDetails));
+                        }
+                        pokemonRepository.setLastDBUpdateTime(new Date(), false);
                         handler.post(MainActivity.this::reloadLastUpdateDBTime);
-                        handler.post(() -> reloadPokemonListFromDB(() -> new FetchPokemonImages(viewModel), MainActivity.this::fetchPokemonDetails));
                     }
                     else throw new JSONException("pokemonList is empty");
                 }
@@ -209,6 +207,13 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.dismiss();
             }
 
+        }
+
+        private boolean pokemonListHasPokemon(@NonNull List<Pokemon> pokemonList, @NonNull String pokemonName) {
+            for (Pokemon pokemon: pokemonList)
+                if (pokemon.getName().equals(pokemonName))
+                    return true;
+            return false;
         }
     }
 

@@ -47,6 +47,11 @@ public class PokemonRepository {
     }
 
     @WorkerThread
+    public List<Pokemon> getAllPokemonsOnly() {
+        return pokemonDAO.getAllPokemonsOnly();
+    }
+
+    @WorkerThread
     public List<Ability> getAllAbilities() {
         return pokemonDAO.getAllAbilities();
     }
