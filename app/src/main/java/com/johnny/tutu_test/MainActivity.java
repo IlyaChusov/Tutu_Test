@@ -126,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
             callback1.call();
             if (!pokemonList_.isEmpty()) {
                 pokemonAdapter.notifyDataSetChanged();
-                Toast.makeText(MainActivity.this, "Произведена синхронизация с БД", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.db_sync_is_done, Toast.LENGTH_SHORT).show();
             } else
-                Toast.makeText(MainActivity.this, "БД пуста", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.db_is_empty, Toast.LENGTH_SHORT).show();
 
             callback2.call();
             liveData.removeObservers(MainActivity.this);
@@ -191,6 +191,8 @@ public class MainActivity extends AppCompatActivity {
                             pokemonRepository.addPokemons(pokemonListToBeAdded, false);
                             handler.post(() -> reloadPokemonListFromDB(() -> new FetchPokemonImages(viewModel), MainActivity.this::fetchPokemonDetails));
                         }
+                        else
+                            handler.post(() -> Toast.makeText(MainActivity.this, R.string.db_is_updated_already, Toast.LENGTH_SHORT).show());
                         pokemonRepository.setLastDBUpdateTime(new Date(), false);
                         handler.post(MainActivity.this::reloadLastUpdateDBTime);
                     }

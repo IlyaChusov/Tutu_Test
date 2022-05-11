@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">Tutu_Test</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="app_name">Tutu Test</string>
+    <string name="title_activity_main">Tutu Test</string>
+    <string name="title_activity_pokemon">Pokemon</string>
 
     <string name="pokemon_name_filling">Pokemon name</string>
     <string name="pokemon_exp_filling">Pokemon experience</string>
@@ -19,4 +20,8 @@
     <string name="last_update_time_filling">Last update time: none</string>
     <string name="last_update_time">Last update time:\n%1$s</string>
     <string name="reload_but">Reload data</string>
+
+    <string name="db_is_updated_already">Database is up-to-date already</string>
+    <string name="db_sync_is_done">Sync with database is done</string>
+    <string name="db_is_empty">Database is empty</string>
 </resources>
