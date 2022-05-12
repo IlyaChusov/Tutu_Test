@@ -27,7 +27,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.johnny.tutu_test.database.PokemonRepository;
-import com.johnny.tutu_test.databinding.ActivityMainBinding;
 import com.johnny.tutu_test.model.Pokemon;
 import com.johnny.tutu_test.model.PokemonAbilities;
 
@@ -52,23 +51,24 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ActivityMainBinding binding;
     private final PokemonAdapter pokemonAdapter = new PokemonAdapter();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private ProgressDialog progressDialog;
     private MainActivityViewModel viewModel;
+    private TextView lastUpdateTimeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        setSupportActionBar(binding.toolbar);
-        binding.recycler.setLayoutManager(new LinearLayoutManager(this));
-        binding.recycler.setAdapter(pokemonAdapter);
-        binding.reloadButton.setOnClickListener((l) -> {
+        setContentView(R.layout.activity_main);
+        setSupportActionBar(findViewById(R.id.toolbar));
+        RecyclerView recyclerView = findViewById(R.id.recycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(pokemonAdapter);
+        lastUpdateTimeView = findViewById(R.id.last_update_time);
+        findViewById(R.id.reloadButton).setOnClickListener((l) -> {
             showProgressDialog(R.string.loading_pokemons);
             FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
             fetchPokemonUrls.start();
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         liveData.observe(this, date -> {
             if (date != null) {
                 DateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
-                binding.lastUpdateTime.setText(getResources().getString(R.string.last_update_time, dateFormat.format(date)));
+                lastUpdateTimeView.setText(getResources().getString(R.string.last_update_time, dateFormat.format(date)));
             }
             if (progressDialog != null)
                 progressDialog.dismiss();
