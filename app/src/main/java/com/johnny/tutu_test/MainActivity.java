@@ -73,12 +73,19 @@ public class MainActivity extends AppCompatActivity {
             FetchPokemonUrls fetchPokemonUrls = new FetchPokemonUrls();
             fetchPokemonUrls.start();
         });
+        if (savedInstanceState == null)
+            loadAllData();
+        else if (!viewModel.hasData())
+            loadAllData();
+        String lastUpdateTime = viewModel.getLastUpdateTime();
+        if (lastUpdateTime != null)
+            lastUpdateTimeView.setText(getResources().getString(R.string.last_update_time, lastUpdateTime));
+    }
 
-        if (savedInstanceState == null) {
-            showProgressDialog(R.string.getting_pokemons_from_db);
-            reloadPokemonListFromDB();
-            reloadLastUpdateDBTime();
-        }
+    private void loadAllData() {
+        showProgressDialog(R.string.getting_pokemons_from_db);
+        reloadPokemonListFromDB();
+        reloadLastUpdateDBTime();
     }
 
     private void reloadLastUpdateDBTime() {
@@ -86,7 +93,9 @@ public class MainActivity extends AppCompatActivity {
         liveData.observe(this, date -> {
             if (date != null) {
                 DateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
-                lastUpdateTimeView.setText(getResources().getString(R.string.last_update_time, dateFormat.format(date)));
+                String time = dateFormat.format(date);
+                viewModel.setLastUpdateTime(time);
+                lastUpdateTimeView.setText(getResources().getString(R.string.last_update_time, time));
             }
             if (progressDialog != null)
                 progressDialog.dismiss();

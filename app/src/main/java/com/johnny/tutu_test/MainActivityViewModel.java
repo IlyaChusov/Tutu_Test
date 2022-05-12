@@ -15,7 +15,9 @@ public class MainActivityViewModel extends AndroidViewModel {
         super(application);
     }
 
-    private static List<Pokemon> pokemonList;
+    private List<Pokemon> pokemonList;
+    private String lastUpdateTime;
+    private boolean hasData = false;
 
     public List<Pokemon> getPokemonList() {
         if (pokemonList == null)
@@ -24,6 +26,20 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public void setPokemonList(List<Pokemon> pokemonList) {
-        MainActivityViewModel.pokemonList = pokemonList;
+        this.pokemonList = pokemonList;
+        hasData = true;
+    }
+
+    public String getLastUpdateTime() {
+        return lastUpdateTime;
+    }
+
+    public void setLastUpdateTime(String lastUpdateTime) {
+        this.lastUpdateTime = lastUpdateTime;
+        hasData = true;
+    }
+
+    public boolean hasData() {
+        return hasData;
     }
 }
